@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LangChain + Sequelize Integration Demo - Vinci Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .badges {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 20px;
+            color: white;
+            font-size: 0.9em;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+        }
+
+        .chat-panel {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 700px;
+        }
+
+        .panel-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .panel-header h2 {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+
+        .panel-header p {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            text-align: right;
+        }
+
+        .message-content {
+            display: inline-block;
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: #667eea;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant .message-content {
+            background: white;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            border-bottom-left-radius: 4px;
+            text-align: left;
+        }
+
+        .message.system .message-content {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+            font-size: 0.9em;
+        }
+
+        .message.error .message-content {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 1em;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .quick-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .quick-btn {
+            padding: 6px 12px;
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 15px;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-btn:hover {
+            background: #b3d9ff;
+            transform: translateY(-1px);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #667eea;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 30px auto;
+            max-width: 1600px;
+            padding: 0 20px;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .feature-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .feature-card p {
+            color: #666;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.85em;
+            margin: 10px 0;
+        }
+
+        code {
+            font-family: 'Courier New', monospace;
+        }
+
+        .stats {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .stat {
+            flex: 1;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🤖 LangChain + Sequelize Integration</h1>
+        <p>Experience the power of AI orchestration and ORM in Vinci Platform</p>
+        
+        <div class="badges">
+            <span class="badge">🧠 LangChain Memory</span>
+            <span class="badge">🛠️ AI Agents with Tools</span>
+            <span class="badge">🗄️ Sequelize ORM</span>
+            <span class="badge">⚡ Azure OpenAI</span>
+            <span class="badge">📊 IT Operations</span>
+        </div>
+    </div>
+
+    <div class="features-grid">
+        <div class="feature-card">
+            <h3>💬 Regular Chat (Original)</h3>
+            <p>Traditional AI chat with manual history management. Each query is independent without advanced memory or tool usage.</p>
+        </div>
+        <div class="feature-card">
+            <h3>🧠 LangChain Memory</h3>
+            <p>BufferMemory keeps context of last 10 exchanges. Smart conversation flow with automatic context retention.</p>
+        </div>
+        <div class="feature-card">
+            <h3>🛠️ AI Agent with Tools</h3>
+            <p>AI automatically selects and executes tools (CMDB search, incidents, users) based on your query intent.</p>
+        </div>
+        <div class="feature-card">
+            <h3>🗄️ Sequelize ORM</h3>
+            <p>Type-safe database queries with models, validations, and relationships. No more raw SQL strings!</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Regular Chat Panel -->
+        <div class="chat-panel">
+            <div class="panel-header">
+                <h2>💬 Regular Chat (Original)</h2>
+                <p>Traditional AI with manual history management</p>
+            </div>
+            <div class="chat-messages" id="regularMessages"></div>
+            <div class="input-area">
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-value" id="regularCount">0</div>
+                        <div class="stat-label">Messages</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="regularTime">0ms</div>
+                        <div class="stat-label">Last Response</div>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="regularInput" placeholder="Type your message..." onkeypress="handleKeyPress(event, 'regular')">
+                    <button class="btn btn-primary" onclick="sendRegularMessage()">Send</button>
+                    <button class="btn btn-secondary" onclick="clearRegularChat()">Clear</button>
+                </div>
+                <div class="quick-actions">
+                    <button class="quick-btn" onclick="sendQuick('regular', 'Show open situations')">📊 Open Situations</button>
+                    <button class="quick-btn" onclick="sendQuick('regular', 'Get top 5 noisy CIs')">🔊 Noisy CIs</button>
+                    <button class="quick-btn" onclick="sendQuick('regular', 'Show active users')">👥 Active Users</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- LangChain Memory Panel -->
+        <div class="chat-panel">
+            <div class="panel-header">
+                <h2>🧠 LangChain + Memory</h2>
+                <p>BufferMemory with context-aware conversations</p>
+            </div>
+            <div class="chat-messages" id="langchainMessages"></div>
+            <div class="input-area">
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-value" id="langchainCount">0</div>
+                        <div class="stat-label">Messages</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="langchainTime">0ms</div>
+                        <div class="stat-label">Last Response</div>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="langchainInput" placeholder="Type your message..." onkeypress="handleKeyPress(event, 'langchain')">
+                    <button class="btn btn-primary" onclick="sendLangChainMessage()">Send</button>
+                    <button class="btn btn-secondary" onclick="clearLangChainChat()">Clear</button>
+                </div>
+                <div class="quick-actions">
+                    <button class="quick-btn" onclick="sendQuick('langchain', 'What did I ask before?')">🔄 Context Test</button>
+                    <button class="quick-btn" onclick="sendQuick('langchain', 'Tell me more about that')">💬 Follow-up</button>
+                    <button class="quick-btn" onclick="sendQuick('langchain', 'Summarize our conversation')">📝 Summary</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Agent Panel -->
+        <div class="chat-panel">
+            <div class="panel-header">
+                <h2>🛠️ AI Agent (Tools)</h2>
+                <p>Automatic tool selection and execution</p>
+            </div>
+            <div class="chat-messages" id="agentMessages"></div>
+            <div class="input-area">
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-value" id="agentCount">0</div>
+                        <div class="stat-label">Messages</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="agentTime">0ms</div>
+                        <div class="stat-label">Last Response</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="toolsUsed">0</div>
+                        <div class="stat-label">Tools Used</div>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="agentInput" placeholder="Ask me anything - I'll use the right tools!" onkeypress="handleKeyPress(event, 'agent')">
+                    <button class="btn btn-primary" onclick="sendAgentMessage()">Send</button>
+                    <button class="btn btn-secondary" onclick="clearAgentChat()">Clear</button>
+                </div>
+                <div class="quick-actions">
+                    <button class="quick-btn" onclick="sendQuick('agent', 'Search CMDB for servers')">🖥️ CMDB Search</button>
+                    <button class="quick-btn" onclick="sendQuick('agent', 'Get situation SID107 details')">📋 Situation Details</button>
+                    <button class="quick-btn" onclick="sendQuick('agent', 'Find user admin')">👤 Find User</button>
+                    <button class="quick-btn" onclick="sendQuick('agent', 'Show IT dashboard')">📊 Dashboard</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let regularCount = 0;
+        let langchainCount = 0;
+        let agentCount = 0;
+        let totalToolsUsed = 0;
+
+        function addMessage(panelId, role, content, isError = false) {
+            const messagesDiv = document.getElementById(panelId);
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isError ? 'error' : role}`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            
+            // Format JSON if present
+            if (content.includes('```json')) {
+                const parts = content.split('```json');
+                contentDiv.innerHTML = parts[0];
+                for (let i = 1; i < parts.length; i++) {
+                    const [jsonPart, ...rest] = parts[i].split('```');
+                    const pre = document.createElement('pre');
+                    pre.textContent = jsonPart.trim();
+                    contentDiv.appendChild(pre);
+                    if (rest.length > 0) {
+                        const text = document.createTextNode(rest.join('```'));
+                        contentDiv.appendChild(text);
+                    }
+                }
+            } else {
+                contentDiv.textContent = content;
+            }
+            
+            messageDiv.appendChild(contentDiv);
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function handleKeyPress(event, type) {
+            if (event.key === 'Enter') {
+                if (type === 'regular') sendRegularMessage();
+                else if (type === 'langchain') sendLangChainMessage();
+                else if (type === 'agent') sendAgentMessage();
+            }
+        }
+
+        function sendQuick(type, message) {
+            if (type === 'regular') {
+                document.getElementById('regularInput').value = message;
+                sendRegularMessage();
+            } else if (type === 'langchain') {
+                document.getElementById('langchainInput').value = message;
+                sendLangChainMessage();
+            } else if (type === 'agent') {
+                document.getElementById('agentInput').value = message;
+                sendAgentMessage();
+            }
+        }
+
+        async function sendRegularMessage() {
+            const input = document.getElementById('regularInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            addMessage('regularMessages', 'user', message);
+            input.value = '';
+            
+            addMessage('regularMessages', 'system', 'Processing...');
+            const startTime = Date.now();
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+
+                const data = await response.json();
+                const responseTime = Date.now() - startTime;
+                
+                // Remove loading message
+                const messages = document.getElementById('regularMessages');
+                messages.removeChild(messages.lastChild);
+
+                if (data.success) {
+                    addMessage('regularMessages', 'assistant', data.response);
+                    regularCount++;
+                    document.getElementById('regularCount').textContent = regularCount;
+                    document.getElementById('regularTime').textContent = responseTime + 'ms';
+                } else {
+                    addMessage('regularMessages', 'assistant', 'Error: ' + (data.error || 'Unknown error'), true);
+                }
+            } catch (error) {
+                const messages = document.getElementById('regularMessages');
+                messages.removeChild(messages.lastChild);
+                addMessage('regularMessages', 'assistant', 'Error: ' + error.message, true);
+            }
+        }
+
+        async function sendLangChainMessage() {
+            const input = document.getElementById('langchainInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            addMessage('langchainMessages', 'user', message);
+            input.value = '';
+            
+            addMessage('langchainMessages', 'system', '🧠 LangChain processing with memory...');
+            const startTime = Date.now();
+
+            try {
+                const response = await fetch('/api/langchain/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message, sessionId: 'demo-session' })
+                });
+
+                const data = await response.json();
+                const responseTime = Date.now() - startTime;
+                
+                // Remove loading message
+                const messages = document.getElementById('langchainMessages');
+                messages.removeChild(messages.lastChild);
+
+                if (data.success) {
+                    addMessage('langchainMessages', 'assistant', data.response);
+                    langchainCount++;
+                    document.getElementById('langchainCount').textContent = langchainCount;
+                    document.getElementById('langchainTime').textContent = responseTime + 'ms';
+                } else {
+                    addMessage('langchainMessages', 'assistant', 'Error: ' + (data.error || 'Unknown error'), true);
+                }
+            } catch (error) {
+                const messages = document.getElementById('langchainMessages');
+                messages.removeChild(messages.lastChild);
+                addMessage('langchainMessages', 'assistant', 'Error: ' + error.message, true);
+            }
+        }
+
+        async function sendAgentMessage() {
+            const input = document.getElementById('agentInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            addMessage('agentMessages', 'user', message);
+            input.value = '';
+            
+            addMessage('agentMessages', 'system', '🛠️ AI Agent analyzing and selecting tools...');
+            const startTime = Date.now();
+
+            try {
+                const response = await fetch('/api/langchain/agent', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message, sessionId: 'agent-session' })
+                });
+
+                const data = await response.json();
+                const responseTime = Date.now() - startTime;
+                
+                // Remove loading message
+                const messages = document.getElementById('agentMessages');
+                messages.removeChild(messages.lastChild);
+
+                if (data.success) {
+                    addMessage('agentMessages', 'assistant', data.response);
+                    
+                    // Count tools used
+                    if (data.intermediateSteps && data.intermediateSteps.length > 0) {
+                        totalToolsUsed += data.intermediateSteps.length;
+                        document.getElementById('toolsUsed').textContent = totalToolsUsed;
+                        
+                        // Show which tools were used
+                        const toolsInfo = data.intermediateSteps.map(step => 
+                            step.action?.tool || 'Unknown tool'
+                        ).join(', ');
+                        addMessage('agentMessages', 'system', `🔧 Tools used: ${toolsInfo}`);
+                    }
+                    
+                    agentCount++;
+                    document.getElementById('agentCount').textContent = agentCount;
+                    document.getElementById('agentTime').textContent = responseTime + 'ms';
+                } else {
+                    addMessage('agentMessages', 'assistant', 'Error: ' + (data.error || 'Unknown error'), true);
+                }
+            } catch (error) {
+                const messages = document.getElementById('agentMessages');
+                messages.removeChild(messages.lastChild);
+                addMessage('agentMessages', 'assistant', 'Error: ' + error.message, true);
+            }
+        }
+
+        async function clearRegularChat() {
+            await fetch('/api/reset', { method: 'POST' });
+            document.getElementById('regularMessages').innerHTML = '';
+            regularCount = 0;
+            document.getElementById('regularCount').textContent = '0';
+            addMessage('regularMessages', 'system', 'Chat cleared!');
+        }
+
+        async function clearLangChainChat() {
+            await fetch('/api/langchain/reset', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sessionId: 'demo-session' })
+            });
+            document.getElementById('langchainMessages').innerHTML = '';
+            langchainCount = 0;
+            document.getElementById('langchainCount').textContent = '0';
+            addMessage('langchainMessages', 'system', '🧠 Memory cleared! Fresh start.');
+        }
+
+        async function clearAgentChat() {
+            document.getElementById('agentMessages').innerHTML = '';
+            agentCount = 0;
+            totalToolsUsed = 0;
+            document.getElementById('agentCount').textContent = '0';
+            document.getElementById('toolsUsed').textContent = '0';
+            addMessage('agentMessages', 'system', '🛠️ Agent reset! Ready for new tasks.');
+        }
+
+        // Welcome messages
+        window.addEventListener('load', () => {
+            addMessage('regularMessages', 'system', '👋 Welcome to Regular Chat! No memory, basic AI responses.');
+            addMessage('langchainMessages', 'system', '🧠 Welcome to LangChain Memory! I remember context from our conversation.');
+            addMessage('agentMessages', 'system', '🛠️ Welcome to AI Agent! I can automatically use tools to answer your questions.');
+        });
+    </script>
+</body>
+</html>

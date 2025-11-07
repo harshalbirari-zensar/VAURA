@@ -1,0 +1,30 @@
+{
+  "name": "ai-foundry-sample",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@azure/openai": "^2.0.0",
+    "@langchain/community": "^0.0.40",
+    "@langchain/core": "^1.0.2",
+    "@langchain/openai": "^1.0.0",
+    "axios": "^1.13.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^4.18.2",
+    "langchain": "^1.0.2",
+    "microsoft-cognitiveservices-speech-sdk": "^1.46.0",
+    "mongodb": "^6.3.0",
+    "morgan": "^1.10.1",
+    "multer": "^2.0.2",
+    "mysql2": "^3.15.3",
+    "openai": "^4.96.1",
+    "sequelize": "^6.37.7",
+    "validator": "^13.11.0",
+    "winston": "^3.18.3"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  }
+}

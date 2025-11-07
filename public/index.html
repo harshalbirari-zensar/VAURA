@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure OpenAI Chat Interface</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🤖 Vinci AI Assistant</h1>
+            <p class="subtitle">Powered by GPT-4 on Azure</p>
+            <button id="resetBtn" class="reset-btn">🔄 Reset Chat</button>
+        </header>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="welcome-message">
+                <h2>👋 Welcome to VINCI IT Operations Chatbot!</h2>
+                <p>I'm your AI assistant powered by Zensar. I can help you with IT operations data.</p>
+                <div style="margin-top: 20px; text-align: left; background: #f0f7ff; padding: 15px; border-radius: 8px; border-left: 4px solid #2196F3;">
+                    <strong style="color: #1565c0;">💡 Try asking:</strong>
+                    <ul style="margin: 10px 0; padding-left: 25px; color: #333;">
+                        <li>"Show me IT operations dashboard"</li>
+                        <li>"Get recent CMDB data"</li>
+                        <li>"Show all active alerts"</li>
+                        <li>"List business services"</li>
+                        <li>"Display open incidents"</li>
+                        <li>"Search knowledge base"</li>
+                        <li>"Show service requests"</li>
+                        <li>"Get all users" (MySQL data)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-container">
+            <textarea 
+                id="userInput" 
+                placeholder="Type your message here..." 
+                rows="3"
+            ></textarea>
+            <button id="sendBtn" class="send-btn">
+                <span class="btn-text">Send</span>
+                <span class="btn-icon">📤</span>
+            </button>
+        </div>
+
+        <div class="status-bar" id="statusBar">
+            <span class="status-indicator">🟢 Connected</span>
+            <span class="token-usage" id="tokenUsage"></span>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
