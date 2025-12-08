@@ -1,10 +1,21 @@
 import { MongoClient } from 'mongodb';
 import dotenv from 'dotenv';
+import logger from './logger.js';
 
 dotenv.config();
 
-// MongoDB Configuration
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://vinciuser:4v8HX~el1GV.70M@172.17.7.133:27017/VINCI';
+// Construct MongoDB URI from environment variables or use provided URI
+const MONGODB_URI = process.env.MONGODB_URI || 
+  (process.env.MONGODB_USER && process.env.MONGODB_PASSWORD 
+    ? `mongodb://${process.env.MONGODB_USER}:${process.env.MONGODB_PASSWORD}@${process.env.MONGODB_HOST || '172.17.7.133'}:${process.env.MONGODB_PORT || '27017'}/${process.env.MONGODB_DATABASE || 'VINCI'}`
+    : `mongodb://${process.env.MONGODB_HOST || '172.17.7.133'}:${process.env.MONGODB_PORT || '27017'}/${process.env.MONGODB_DATABASE || 'VINCI'}`
+  );
+
+// Security check: warn if using default/no authentication
+if (!MONGODB_URI.includes('@') && !process.env.MONGODB_URI) {
+  console.warn('⚠️  WARNING: MongoDB is configured without authentication!');
+  console.warn('   Set MONGODB_URI or MONGODB_USER/MONGODB_PASSWORD in .env file');
+}
 const DB_NAME = 'VINCI';
 
 let client = null;
@@ -14,6 +25,7 @@ let db = null;
 const COLLECTIONS = {
   // Core IT Operations
   ALERTS: 'Alerts',
+  EVENTS: 'Events',
   SITUATIONS: 'Situations',
   SITUATIONS_FUTURE: 'SituationsFuture',
   BUSINESS_SERVICE: 'BusinessService',
@@ -119,7 +131,7 @@ async function initializeMongoDB() {
     await client.connect();
     db = client.db(DB_NAME);
     
-    console.log('✅ MongoDB connected successfully to database:', DB_NAME);
+    // Log to file only, no console output
     
     // Create indexes for better performance
     await createIndexes();
@@ -162,7 +174,7 @@ async function createIndexes() {
     // Change Request indexes
     await db.collection(COLLECTIONS.CHANGE_REQUEST).createIndex({ status: 1, priority: 1 });
     
-    console.log('📑 MongoDB indexes created successfully');
+    // Log to file only, no console output
   } catch (error) {
     console.error('Index creation warning:', error.message);
   }
@@ -243,7 +255,7 @@ async function testMongoConnection() {
   try {
     const database = await getDatabase();
     await database.command({ ping: 1 });
-    console.log('✅ MongoDB connection test successful');
+    // Log to file only, no console output
     return true;
   } catch (error) {
     console.error('❌ MongoDB connection test failed:', error.message);

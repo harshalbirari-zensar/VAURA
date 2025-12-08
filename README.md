@@ -1,8 +1,23 @@
-# VINCI AI Chatbot - Complete Documentation Package
+# AUR AI Assistance - AI-Powered IT Operations Chatbot
+
+## 🚀 Overview
+
+AUR AI Assistance is an advanced AI-powered IT Operations chatbot that provides intelligent assistance for IT service management, incident resolution, and operational support. Built with Node.js, MongoDB, and Azure OpenAI.
+
+## ✨ Recent Updates
+- **Context Tracking System (Nov 2025):** Complete conversation tracking and analytics for all chats
+  - Real-time dashboard with visual analytics
+  - Session tracking with entity monitoring
+  - User pattern analysis and learning capabilities
+  - 11 comprehensive API endpoints
+  - Auto-save and data export features
+- **Codebase Cleanup (Nov 2025):** Removed 10+ unused files, optimized dependencies, cleaned up 1,500+ lines of code
+- **Performance Optimized:** Faster startup, reduced bundle size, cleaner project structure
+- **Production Ready:** Streamlined for deployment and maintenance
 
 ## 📚 Documentation Overview
 
-This documentation package provides comprehensive information about the VINCI AI-Powered IT Operations Chatbot, including architecture, features, APIs, deployment, and operations guides.
+This documentation package provides comprehensive information about the AUR AI Assistance IT Operations Chatbot, including architecture, features, APIs, deployment, and operations guides.
 
 ### Document Structure
 
@@ -278,9 +293,9 @@ LOG_DIR=./logs
 ## 📞 Support & Contact
 
 ### Technical Support
-- **Email:** support@vinci-chatbot.com
-- **Documentation:** https://docs.vinci-chatbot.com
-- **GitHub:** https://github.com/your-org/vinci-chatbot
+- **Email:** support@aur-ai-assistance.com
+- **Documentation:** https://docs.aur-ai-assistance.com
+- **GitHub:** https://github.com/your-org/aur-ai-assistance
 
 ### Escalation Path
 1. **L1 Support:** General inquiries and basic troubleshooting
@@ -299,7 +314,7 @@ LOG_DIR=./logs
 
 ## 📄 License
 
-Copyright © 2025 VINCI AI Chatbot Project. All rights reserved.
+Copyright © 2025 AUR AI Assistance Project. All rights reserved.
 
 ---
 

@@ -5,9 +5,53 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Sensitive data patterns to mask
+const sensitivePatterns = [
+  { pattern: /\b(api[_-]?key|apikey)[\s:=]+['"]?([^'"\s]+)['"]?/gi, replacement: 'api_key: [REDACTED]' },
+  { pattern: /\b(password|passwd|pwd)[\s:=]+['"]?([^'"\s]+)['"]?/gi, replacement: 'password: [REDACTED]' },
+  { pattern: /\b(secret|token|bearer)[\s:=]+['"]?([^'"\s]+)['"]?/gi, replacement: 'secret: [REDACTED]' },
+  { pattern: /\b(authorization):\s*bearer\s+[\w\-\.]+/gi, replacement: 'authorization: Bearer [REDACTED]' },
+  { pattern: /\b([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g, replacement: '[EMAIL_REDACTED]' },
+  { pattern: /\b(\d{3}[-.]?\d{2}[-.]?\d{4})\b/g, replacement: '[SSN_REDACTED]' }, // SSN pattern
+  { pattern: /\b(mongodb:\/\/[^@\s]+@)/gi, replacement: 'mongodb://[CREDENTIALS_REDACTED]@' },
+  { pattern: /\b(mysql:\/\/[^@\s]+@)/gi, replacement: 'mysql://[CREDENTIALS_REDACTED]@' },
+];
+
+/**
+ * Sanitize log message to remove sensitive data
+ * @param {string} message - Log message
+ * @returns {string} Sanitized message
+ */
+function sanitizeMessage(message) {
+  if (typeof message !== 'string') {
+    return message;
+  }
+  
+  let sanitized = message;
+  
+  for (const { pattern, replacement } of sensitivePatterns) {
+    sanitized = sanitized.replace(pattern, replacement);
+  }
+  
+  return sanitized;
+}
+
+// Custom format to sanitize logs
+const sanitizeFormat = winston.format((info) => {
+  info.message = sanitizeMessage(info.message);
+  
+  // Also sanitize metadata
+  if (info.meta && typeof info.meta === 'object') {
+    info.meta = JSON.parse(sanitizeMessage(JSON.stringify(info.meta)));
+  }
+  
+  return info;
+});
+
 // Define log format
 const logFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+  sanitizeFormat(), // Add sanitization
   winston.format.errors({ stack: true }),
   winston.format.splat(),
   winston.format.printf(({ timestamp, level, message, stack }) => {

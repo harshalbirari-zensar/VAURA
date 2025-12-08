@@ -31,6 +31,7 @@ const sequelize = new Sequelize(
 export async function testSequelizeConnection() {
   try {
     await sequelize.authenticate();
+    // Log to file only, no console output
     logger.info('✅ Sequelize connected successfully to MySQL database');
     return true;
   } catch (error) {

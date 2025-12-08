@@ -1,12 +1,15 @@
 import mysql from 'mysql2/promise';
+import dotenv from 'dotenv';
 
-// Database configuration
+dotenv.config();
+
+// Database configuration - ALL VALUES FROM ENVIRONMENT VARIABLES
 const dbConfig = {
-  host: 'dev.thevinci.co.in',
-  port: 3306,
-  user: 'root',
-  password: '4v8HX~el1GV.70M',
-  database: 'vinci',
+  host: process.env.MYSQL_HOST || process.env.DB_HOST || 'dev.thevinci.co.in',
+  port: parseInt(process.env.MYSQL_PORT || process.env.DB_PORT || '3306'),
+  user: process.env.MYSQL_USER || process.env.DB_USER || 'root',
+  password: process.env.MYSQL_PASSWORD || process.env.DB_PASSWORD,
+  database: process.env.MYSQL_DATABASE || process.env.DB_NAME || 'vinci',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -17,6 +20,12 @@ const dbConfig = {
   timeout: 60000 // 60 seconds query timeout
 };
 
+// Security check: warn if no password is set
+if (!dbConfig.password) {
+  console.warn('⚠️  WARNING: MySQL password not set in environment variables!');
+  console.warn('   Set MYSQL_PASSWORD or DB_PASSWORD in .env file');
+}
+
 // Create connection pool
 const pool = mysql.createPool(dbConfig);
 
@@ -24,7 +33,7 @@ const pool = mysql.createPool(dbConfig);
 async function testConnection() {
   try {
     const connection = await pool.getConnection();
-    console.log('✅ Database connected successfully to:', dbConfig.database);
+    // Log to file only, no console output
     connection.release();
     return true;
   } catch (error) {
